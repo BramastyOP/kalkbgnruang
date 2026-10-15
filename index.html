@@ -90,18 +90,19 @@ input{
   </div>
 </div>
 <script>
-const PI = Math.PI;
+const piOf = r => (r % 7 === 0 ? 22/7 : 3.14);
+const piTxt = r => (r % 7 === 0 ? "22/7" : "3,14");
 const SHAPES = [
   {n:"Kubus", f:"V = s × s × s", in:[["s","Sisi (s)"]],
    v:a=>a.s**3, e:a=>`${a.s} × ${a.s} × ${a.s}`},
   {n:"Balok", f:"V = p × l × t", in:[["p","Panjang (p)"],["l","Lebar (l)"],["t","Tinggi (t)"]],
    v:a=>a.p*a.l*a.t, e:a=>`${a.p} × ${a.l} × ${a.t}`},
-  {n:"Tabung", f:"V = π × r² × t", in:[["r","Jari-jari (r)"],["t","Tinggi (t)"]],
-   v:a=>PI*a.r**2*a.t, e:a=>`π × ${a.r}² × ${a.t}`},
-  {n:"Bola", f:"V = 4/3 × π × r³", in:[["r","Jari-jari (r)"]],
-   v:a=>4/3*PI*a.r**3, e:a=>`4/3 × π × ${a.r}³`},
-  {n:"Kerucut", f:"V = 1/3 × π × r² × t", in:[["r","Jari-jari (r)"],["t","Tinggi (t)"]],
-   v:a=>PI*a.r**2*a.t/3, e:a=>`1/3 × π × ${a.r}² × ${a.t}`},
+  {n:"Tabung", f:"V = π × r² × t (π = 22/7 jika r kelipatan 7, selain itu 3,14)", in:[["r","Jari-jari (r)"],["t","Tinggi (t)"]],
+   v:a=>piOf(a.r)*a.r**2*a.t, e:a=>`${piTxt(a.r)} × ${a.r}² × ${a.t}`},
+  {n:"Bola", f:"V = 4/3 × π × r³ (π = 22/7 jika r kelipatan 7, selain itu 3,14)", in:[["r","Jari-jari (r)"]],
+   v:a=>4/3*piOf(a.r)*a.r**3, e:a=>`4/3 × ${piTxt(a.r)} × ${a.r}³`},
+  {n:"Kerucut", f:"V = 1/3 × π × r² × t (π = 22/7 jika r kelipatan 7, selain itu 3,14)", in:[["r","Jari-jari (r)"],["t","Tinggi (t)"]],
+   v:a=>piOf(a.r)*a.r**2*a.t/3, e:a=>`1/3 × ${piTxt(a.r)} × ${a.r}² × ${a.t}`},
   {n:"Limas segitiga", f:"V = 1/3 × (½ × a × ta) × t",
    in:[["a","Alas segitiga (a)"],["ta","Tinggi alas (ta)"],["t","Tinggi limas (t)"]],
    v:a=>a.a*a.ta/2*a.t/3, e:a=>`1/3 × (½ × ${a.a} × ${a.ta}) × ${a.t}`},
