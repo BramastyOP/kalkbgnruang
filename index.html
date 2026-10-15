@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalkulator Bangun Ruang</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Nunito+Sans:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#F2F6FB; --grid:#D3E0EE; --ink:#13253F; --muted:#51647F;
+  --card:#FFFFFF; --line:#B9CBE0; --accent:#1F4E9E; --accent-ink:#FFFFFF; --mark:#F7C531; --err:#B3261E;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1B2D; --grid:#1B2C45; --ink:#E6EEF9; --muted:#9DB0CA;
+    --card:#152339; --line:#2C4262; --accent:#7FB0FF; --accent-ink:#0F1B2D; --mark:#E0B21F; --err:#FF8A80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1B2D; --grid:#1B2C45; --ink:#E6EEF9; --muted:#9DB0CA;
+  --card:#152339; --line:#2C4262; --accent:#7FB0FF; --accent-ink:#0F1B2D; --mark:#E0B21F; --err:#FF8A80;
+  color-scheme: dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  font-family:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.5;
+}
+.wrap{max-width:960px;margin:0 auto;padding:32px 20px 48px}
+h1,h2,.num{font-family:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif}
+h1{font-size:clamp(2rem,5vw,3rem);line-height:1.05;margin:0 0 8px;letter-spacing:-.02em}
+.sub{margin:0 0 28px;color:var(--muted);max-width:52ch}
+.layout{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
+.shapes{display:grid;gap:8px;margin:0;padding:0;border:0}
+.shapes legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.shape{
+  text-align:left;font:inherit;color:var(--ink);background:var(--card);
+  border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;
+}
+.shape b{display:block;font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:700}
+.shape small{color:var(--muted)}
+.shape[aria-checked="true"]{border-color:var(--accent);box-shadow:inset 6px 0 0 var(--mark)}
+.shape:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:24px}
+h2{margin:0 0 4px;font-size:1.6rem}
+.formula{margin:0 0 20px;color:var(--muted)}
+.fields{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+label{display:block;font-weight:600;margin-bottom:4px}
+input{
+  width:100%;font:inherit;color:var(--ink);background:var(--paper);
+  border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;
+}
+.hint{min-height:1.4em;margin:12px 0 0;color:var(--err);font-size:.95rem}
+.result{margin-top:12px;padding:18px 20px;border-left:8px solid var(--mark);background:var(--paper);border-radius:4px 10px 10px 4px}
+.result .lbl{color:var(--muted);font-weight:600}
+.num{font-size:clamp(1.9rem,6vw,2.8rem);font-weight:700;line-height:1.1;overflow-wrap:anywhere}
+.steps{margin:6px 0 0;color:var(--muted);overflow-wrap:anywhere}
+.reset{margin-top:16px;font:inherit;font-weight:600;color:var(--accent);background:none;border:1.5px solid var(--accent);border-radius:8px;padding:8px 14px;cursor:pointer}
+@media (max-width:700px){
+  .layout{grid-template-columns:1fr}
+  .shapes{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kalkulator Bangun Ruang</h1>
+  <p class="sub">Pilih bangun ruang, isi ukurannya, dan volume langsung dihitung.</p>
+  <div class="layout">
+    <fieldset class="shapes" role="radiogroup" id="shapes"><legend>Pilih bangun ruang</legend></fieldset>
+    <section class="panel" aria-labelledby="title">
+      <h2 id="title"></h2>
+      <p class="formula" id="formula"></p>
+      <div class="fields" id="fields"></div>
+      <p class="hint" id="hint" role="alert"></p>
+      <div class="result" aria-live="polite">
+        <div class="lbl">Volume</div>
+        <div class="num" id="value">–</div>
+        <p class="steps" id="steps">Isi semua ukuran untuk melihat hasil.</p>
+      </div>
+      <button class="reset" id="reset" type="button">Kosongkan isian</button>
+    </section>
+  </div>
+</div>
+<script>
+const PI = Math.PI;
+const SHAPES = [
+  {n:"Kubus", f:"V = s × s × s", in:[["s","Sisi (s)"]],
+   v:a=>a.s**3, e:a=>`${a.s} × ${a.s} × ${a.s}`},
+  {n:"Balok", f:"V = p × l × t", in:[["p","Panjang (p)"],["l","Lebar (l)"],["t","Tinggi (t)"]],
+   v:a=>a.p*a.l*a.t, e:a=>`${a.p} × ${a.l} × ${a.t}`},
+  {n:"Tabung", f:"V = π × r² × t", in:[["r","Jari-jari (r)"],["t","Tinggi (t)"]],
+   v:a=>PI*a.r**2*a.t, e:a=>`π × ${a.r}² × ${a.t}`},
+  {n:"Bola", f:"V = 4/3 × π × r³", in:[["r","Jari-jari (r)"]],
+   v:a=>4/3*PI*a.r**3, e:a=>`4/3 × π × ${a.r}³`},
+  {n:"Kerucut", f:"V = 1/3 × π × r² × t", in:[["r","Jari-jari (r)"],["t","Tinggi (t)"]],
+   v:a=>PI*a.r**2*a.t/3, e:a=>`1/3 × π × ${a.r}² × ${a.t}`},
+  {n:"Limas segitiga", f:"V = 1/3 × (½ × a × ta) × t",
+   in:[["a","Alas segitiga (a)"],["ta","Tinggi alas (ta)"],["t","Tinggi limas (t)"]],
+   v:a=>a.a*a.ta/2*a.t/3, e:a=>`1/3 × (½ × ${a.a} × ${a.ta}) × ${a.t}`},
+  {n:"Limas segiempat", f:"V = 1/3 × s² × t (alas persegi)",
+   in:[["s","Sisi persegi (s)"],["t","Tinggi limas (t)"]],
+   v:a=>a.s**2*a.t/3, e:a=>`1/3 × ${a.s}² × ${a.t}`},
+  {n:"Prisma segitiga", f:"V = (½ × a × ta) × t",
+   in:[["a","Alas segitiga (a)"],["ta","Tinggi alas (ta)"],["t","Tinggi prisma (t)"]],
+   v:a=>a.a*a.ta/2*a.t, e:a=>`(½ × ${a.a} × ${a.ta}) × ${a.t}`}
+];
+const fmt = new Intl.NumberFormat("id-ID",{maximumFractionDigits:4});
+const $ = id => document.getElementById(id);
+let cur = 0;
+
+function renderList(){
+  $("shapes").insertAdjacentHTML("beforeend", SHAPES.map((s,i)=>
+    `<button type="button" class="shape" role="radio" aria-checked="${i===cur}" data-i="${i}"><b>${s.n}</b><small>${s.f.replace(/ \(.*\)/,"")}</small></button>`).join(""));
+  $("shapes").addEventListener("click",e=>{
+    const b=e.target.closest(".shape"); if(b) select(+b.dataset.i);
+  });
+}
+function select(i){
+  cur=i; const s=SHAPES[i];
+  document.querySelectorAll(".shape").forEach((b,k)=>b.setAttribute("aria-checked",k===i));
+  $("title").textContent=s.n; $("formula").textContent="Rumus: "+s.f;
+  $("fields").innerHTML=s.in.map(([k,l])=>
+    `<div><label for="f-${k}">${l}</label><input id="f-${k}" data-k="${k}" type="number" inputmode="decimal" min="0" step="any"></div>`).join("");
+  $("fields").querySelectorAll("input").forEach(el=>el.addEventListener("input",calc));
+  calc();
+}
+function calc(){
+  const s=SHAPES[cur], a={}; let empty=false, bad=false;
+  s.in.forEach(([k])=>{
+    const raw=$("f-"+k).value.trim();
+    if(raw===""){empty=true;return;}
+    const n=Number(raw);
+    if(!isFinite(n)||n<=0) bad=true; else a[k]=n;
+  });
+  $("hint").textContent = bad ? "Ukuran harus berupa angka lebih besar dari 0." : "";
+  if(empty||bad){
+    $("value").textContent="–";
+    $("steps").textContent="Isi semua ukuran untuk melihat hasil.";
+    return;
+  }
+  $("value").textContent=fmt.format(s.v(a));
+  $("steps").textContent=s.e(a)+" = "+fmt.format(s.v(a));
+}
+$("reset").addEventListener("click",()=>{
+  document.querySelectorAll("#fields input").forEach(i=>i.value="");
+  calc(); const f=document.querySelector("#fields input"); if(f) f.focus();
+});
+renderList(); select(0);
+</script>
+</body>
+</html>
