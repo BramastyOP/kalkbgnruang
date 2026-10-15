@@ -109,7 +109,7 @@ const SHAPES = [
   {n:"Limas segiempat", f:"V = 1/3 × s² × t (alas persegi)",
    in:[["s","Sisi persegi (s)"],["t","Tinggi limas (t)"]],
    v:a=>a.s**2*a.t/3, e:a=>`1/3 × ${a.s}² × ${a.t}`},
-  {n:"Prisma segitiga", f:"V = (½ × a × ta) × t",
+  {n:"Prisma segitiga", f:"V = ½ × a × ta × t",
    in:[["a","Alas segitiga (a)"],["ta","Tinggi alas (ta)"],["t","Tinggi prisma (t)"]],
    v:a=>a.a*a.ta/2*a.t, e:a=>`(½ × ${a.a} × ${a.ta}) × ${a.t}`}
 ];
@@ -119,7 +119,7 @@ let cur = 0;
 
 function renderList(){
   $("shapes").insertAdjacentHTML("beforeend", SHAPES.map((s,i)=>
-    `<button type="button" class="shape" role="radio" aria-checked="${i===cur}" data-i="${i}"><b>${s.n}</b><small>${s.f.replace(/ \(.*\)/,"")}</small></button>`).join(""));
+    `<button type="button" class="shape" role="radio" aria-checked="${i===cur}" data-i="${i}"><b>${s.n}</b><small>${s.f.replace(/ \([^()]*\)$/,"")}</small></button>`).join(""));
   $("shapes").addEventListener("click",e=>{
     const b=e.target.closest(".shape"); if(b) select(+b.dataset.i);
   });
